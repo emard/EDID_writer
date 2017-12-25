@@ -22,42 +22,50 @@ Power5V         9      14
 GND             11     15
 */
 
-#include <Wire.h>
+#include <SoftwareWire.h>
+SoftwareWire Wire(32+29,32+28);
+
+#define BYTE HEX
+
+#define LED2 8
+#define LED18 9
+
 int i; 
 int inByte = 0;         // incoming serial byte
 int count = 0; 
 char edidarray[128];
 void setup()
 {
+  Wire.setClock(100000L); // 100000-400000
   Wire.begin();        // join i2c bus (address optional for master)
-  Serial.begin(9600);  // start serial for output
+  // Serial.begin(115200);  // start serial for output
   
   //write to vclk pin on pin 2 
-  pinMode(2, OUTPUT);  
-  pinMode(18, OUTPUT);  
+  pinMode(LED2, OUTPUT);  
+  pinMode(LED18, OUTPUT);  
   
   //This puts i2c eeproms that are also clocked off the vsync into R/W mode
-  digitalWrite(18, HIGH);    // set the LED off
+  digitalWrite(LED18, HIGH);    // set the LED off
   for(i = 0; i < 20; i++){
-    digitalWrite(2, HIGH);   // set the LED on
+    digitalWrite(LED2, HIGH);   // set the LED on
     delay(10);                  // wait for a second
-    digitalWrite(2, LOW);    // set the LED off
+    digitalWrite(LED2, LOW);    // set the LED off
     delay(10);
   }
-  digitalWrite(2, HIGH);   // set the LED on
+  digitalWrite(LED2, HIGH);   // set the LED on
   delay(10);
-  digitalWrite(18, LOW);    // set the LED off
+  digitalWrite(LED18, LOW);    // set the LED off
   delay(10);
-  digitalWrite(2, LOW);   // set the LED on
+  digitalWrite(LED2, LOW);   // set the LED on
   
   for(i = 0; i < 10; i++){
-    digitalWrite(2, HIGH);   // set the LED on
+    digitalWrite(LED2, HIGH);   // set the LED on
     delay(10);                  // wait for a second
-    digitalWrite(2, LOW);    // set the LED off
+    digitalWrite(LED2, LOW);    // set the LED off
     delay(10);
   }
   //disable writing to eeprom 
-  digitalWrite(2, LOW);    // set the LED off
+  digitalWrite(LED2, LOW);    // set the LED off
   Serial.println("EDID Reader Writer C 2011 Kieran Levin kiram9@yahoo.com");
 }
 
@@ -66,13 +74,13 @@ void setup()
 int edidreadbytes(char * array){
   byte mycount = 0; 
       Wire.beginTransmission(B1010000);
-      Wire.send(mycount);
+      Wire.write(byte(mycount));
       Wire.endTransmission();
   for(int j =0; j < 128; j++){
      Wire.requestFrom(B1010000, 1);
      if (Wire.available())    // slave may send less than requested
      { 
-       array[j] = Wire.receive(); // receive a byte as character
+       array[j] = Wire.read(); // receive a byte as character
        mycount++;
      }
      delay(10);
@@ -81,16 +89,18 @@ int edidreadbytes(char * array){
 }
 int edidwritebytes(char * array){
   byte mycount = 0;
-  digitalWrite(2, HIGH);    // set the LED off
+  digitalWrite(LED2, HIGH);    // set the LED off
   delay(10);
   for(byte j =0; j < 128;j++){
       Wire.beginTransmission(B1010000);
-      Wire.send(j);
-      Wire.send(array[j]);
+      #if 1
+      Wire.write(byte(j));
+      Wire.write(byte(array[j]));
       Wire.endTransmission();
+      #endif
      delay(10);
   }
- digitalWrite(2, LOW);    // set the LED off
+ digitalWrite(LED2, LOW);    // set the LED off
  return mycount; 
 }
 void printDetailedinfo(){

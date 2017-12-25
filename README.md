@@ -1,3 +1,10 @@
+# EDID_writer
+
+Simple i2c utility for reading (and sometimes even writing) i2c EEPROMs found
+in VGA/DVI/HDMI monitors. Uses SoftwareWire library (software i2c) on Arduino.
+
+# Original README
+
 EDID_writer
 ===========
 
